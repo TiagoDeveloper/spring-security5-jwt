@@ -13,7 +13,7 @@ import com.tiagodeveloper.dto.UsuarioDTO;
 @RequestMapping("/home")
 public class HomeController {
 
-	@PreAuthorize("hasAnyRole('ROLE_GUEST')")
+	@PreAuthorize("hasAnyAuthority('SCOPE_GUEST')")
 	@GetMapping
 	public ResponseEntity<UsuarioDTO> home() {
 		return new ResponseEntity<UsuarioDTO>(UsuarioDTO.builder()
