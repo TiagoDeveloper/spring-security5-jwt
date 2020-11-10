@@ -11,13 +11,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 
@@ -42,7 +43,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		.and().sessionManagement(session -> 
 			session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 		).httpBasic(Customizer.withDefaults())
-		.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
+		.oauth2ResourceServer(oAuth2Configurer -> oAuth2Configurer.jwt(
+			jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverterCustomizer())
+				
+		))
 		.exceptionHandling((exceptions) -> exceptions
 				.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
 				.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
@@ -63,6 +67,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean
 	public JwtDecoder jwtDecoder(){
 		return NimbusJwtDecoder.withPublicKey(publicKey).build();
+	}
+	
+	private JwtAuthenticationConverter jwtAuthenticationConverterCustomizer() {
+		final JwtAuthenticationConverter jwtAuthenticationConverter =  new JwtAuthenticationConverter();
+		final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+		
+			jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+			jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+		
+		return jwtAuthenticationConverter;
 	}
 
 }
